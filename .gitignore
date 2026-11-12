@@ -1,3 +1,10 @@
-__pycache__
+__pycache__/
+*.py[cod]
+*$py.class
 *.egg-info/
-*.pyc
+dist/
+build/
+*.whl
+*.tar.gz
+.venv/
+.pytest_cache/

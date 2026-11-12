@@ -1,52 +1,105 @@
-## Installation
-It is recommended to install yt-dlp via pip rather than using the standalone executable from the releases page.  
-This plugin requires yt-dlp `2023.01.02` or later, and [YTSubConverter](https://github.com/arcusmaximus/YTSubConverter/releases/latest).
+# yt-dlp-assify
 
-### Option 1: Install with pipx
-```sh
-# python3 -m pip install --user pipx
-# python3 -m pipx ensurepath
-# pipx install yt-dlp
-pipx inject yt-dlp secretstorage
-pipx inject yt-dlp https://github.com/bsdrop/yt-dlp-assify/archive/master.zip
+A [yt-dlp](https://github.com/yt-dlp/yt-dlp) post-processor plugin that automatically converts YouTube `srv3` / `ytt` formatted subtitles into styled `.ass` subtitles using [YTSubConverter](https://github.com/arcusmaximus/YTSubConverter).
+
+This allows embedding fully styled, formatted, and positioned YouTube subtitles directly into `.mkv` files or saving standalone `.ass` subtitle files.
+
+## Installing
+
+Requires yt-dlp `2023.01.02` or higher.
+
+YTSubConverter must be present on your system.
+
+You can download the `.whl` file from the [latest release](https://github.com/nateify/yt-dlp-assify/releases/latest) and place the zip file in a [supported plugin directory](https://github.com/yt-dlp/yt-dlp#installing-plugins).
+
+### pip/pipx/uv
+
 ```
-### Option 2: Install with pip
-```sh
-python3 -m pip install -U https://github.com/bsdrop/yt-dlp-assify/archive/master.zip yt-dlp
+pipx inject yt-dlp yt-dlp-assify
 ```
 
-See [installing yt-dlp plugins](https://github.com/yt-dlp/yt-dlp#installing-plugins) for other installation methods.
-
-Make sure [YTSubConverter](https://github.com/arcusmaximus/YTSubConverter/releases/latest) is available in your PATH. Linux users will also need `mono`:
-```sh
-# After installing mono, ensure ~/.local/bin is in your $PATH
-mkdir -p ~/.local/YTSubConverter
-cd ~/.local/YTSubConverter
-curl -L https://github.com/arcusmaximus/YTSubConverter/releases/latest/download/YTSubConverter-Linux.tar.xz -o ~/.local/YTSubConverter/YTSubConverter.tar.xz
-tar -vxf YTSubConverter.tar.xz
-echo '#!/bin/bash' > ~/.local/bin/YTSubConverter
-echo 'mono ~/.local/YTSubConverter/YTSubConverter.exe "$@"' >> ~/.local/bin/YTSubConverter
-chmod +x ~/.local/bin/YTSubConverter
 ```
+python -m pip install -U yt-dlp-assify
+```
+
+```
+uv tool install --reintall yt-dlp --with yt-dlp-assify
+```
+
+### Installing YTSubConverter
+
+#### Windows
+- **WinGet**: `winget install arcusmaximus.ytsubconverter`
+- **Scoop**: `scoop bucket add extras && scoop install ytsubconverter`
+- **Manual**: Download `YTSubConverter.exe` from [Releases](https://github.com/arcusmaximus/YTSubConverter/releases/latest) and place it in your `PATH`.
+
+#### Linux
+
+- **Debian / Ubuntu**: Install the official `.deb` package.
+- **Fedora / RHEL**: Install the official `.rpm` package.
+- **Arch Linux**: Install `ytsubconverter-bin` from the AUR.
+- **Manual**: Extract `YTSubConverter-Linux.tar.xz` to `~/.local/bin` or `/usr/local/bin`.
+
+#### macOS
+- Download `YTSubConverter-macOS.dmg` for either `x64` or `arm64` (Apple Silicon).
+- Drag `YTSubConverter.app` to your `/Applications` directory.
 
 ## Usage
-To use plugin, simply run:
+
+The following options are required:
+- `--sub-format` set to `srv3` and/or `ytt`
+- `--embed-subs`
+- `--remux-video mkv` or `--merge-output-format mkv` depending on the format selection.
+- `--use-postprocessor Assify`
+
+Example:
+
 ```sh
-yt-dlp --embed-subs --postprocessor-args assify $YOUTUBE_URL
-# Example:
-yt-dlp -fba+bv --extractor-args youtube:skip=translated_subs --embed-subs --sub-lang=all,-live_chat --sub-format=srv3/ytt --use-postprocessor assify --embed-thumbnail --embed-metadata -t mkv -t sleep https://www.youtube.com/watch?v=8MImc3MxYZg
+yt-dlp \
+  --sub-langs "all,-live_chat" \
+  --sub-format "srv3/ytt" \
+  --use-postprocessor Assify \
+  --embed-subs \
+  --remux-video mkv \
+  "https://www.youtube.com/watch?v=VIDEO_ID"
 ```
 
-**Note:** Output format must be .mkv. Avoid using `--merge-format=mkv`, as it caused unexpected behavior in my testing.  
+### Options
 
-## Contributing
-Pull requests and issues are welcome! Feel free to submit bug reports or feature requests.
+Options can be passed directly to the post-processor in key-value format via `--use-postprocessor "Assify:key=value"`. Multiple options can be combined using semicolons:
 
-## License
-This project is licensed under The Unlicense, the same license used by [yt-dlp](https://github.com/yt-dlp/yt-dlp). See the [LICENSE](LICENSE) file for details.
+#### Specifying the YTSubConverter Executable Path
+If `YTSubConverter` is not located in standard search paths or `PATH`, pass the `path` option:
+```sh
+yt-dlp --use-postprocessor "Assify:path=/custom/path/to/YTSubConverter" ...
+```
 
-This repository contains a plugin package for [yt-dlp](https://github.com/yt-dlp/yt-dlp#readme).
-See [yt-dlp plugins](https://github.com/yt-dlp/yt-dlp#plugins) for more details.
+#### Visually Accurate Positioning (`--visual`)
+YTSubConverter supports a `--visual` flag for visually accurate positioning. Pass `visual=true`:
+```sh
+yt-dlp --use-postprocessor "Assify:visual=true" ...
+```
 
-## Development
-See the [Plugin Development](https://github.com/yt-dlp/yt-dlp/wiki/Plugin-Development) section of the yt-dlp wiki.
+> **Note:** When this option is enabled, the resulting `.ass` file cannot be converted back to SRV3.
+
+#### Conversion Mode
+Controls how subtitle tracks are converted based on whether they contain styles:
+```sh
+yt-dlp --use-postprocessor "Assify:mode=auto" ...
+```
+
+* **`auto`** *(Default)*: Inspects the SRV3 XML content. Converts **styled** subtitles (karaoke, custom fonts, colors, positioning) to `.ass` via `YTSubConverter`, and converts **unstyled** (plain dialogue) subtitles to `.srt`.
+* **`always_ass`**: Converts all SRV3/YTT tracks to `.ass`, even if unstyled (legacy plugin behavior).
+* **`only_styled`**: Converts styled tracks to `.ass`, but leaves unstyled tracks as original SRV3.
+
+#### Subtitle Display Cap
+When converting unstyled SRV3 subtitles to `.srt`, YouTube occasionally omits the duration (`d`) attribute on caption cues. 
+
+You can pass `max_duration_cap` in milliseconds to prevent captions from remaining frozen on screen during long pauses or music breaks:
+```sh
+# Default: Set to 0 to disable the cap, matching YouTube's behavior
+yt-dlp --use-postprocessor "Assify:max_duration_cap=0" ...
+
+# Set a 5 second cap
+yt-dlp --use-postprocessor "Assify:max_duration_cap=5000" ...
+```

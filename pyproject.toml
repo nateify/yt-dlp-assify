@@ -1,6 +1,94 @@
 [build-system]
-requires = ["setuptools"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling>=1.27.0"]
+build-backend = "hatchling.build"
 
-[tool.distutils.bdist_wheel]
-universal = true
+[project]
+name = "yt-dlp-assify"
+version = "2026.11.11"
+description = "A yt-dlp postprocessor plugin to convert YouTube srv3/ytt subtitles to ASS format using YTSubConverter"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "Unlicense"
+license-files = ["LICENSE"]
+authors = [
+    { name = "nateify" },
+]
+keywords = [
+    "yt-dlp",
+    "yt-dlp-plugin",
+    "ytsubconverter",
+    "subtitles",
+    "ass",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: The Unlicense (Unlicense)",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Multimedia :: Video",
+]
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/nateify/yt-dlp-assify"
+Repository = "https://github.com/nateify/yt-dlp-assify"
+
+[dependency-groups]
+dev = [
+    "ruff>=0.14.0",
+    "types-yt-dlp",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["yt_dlp_plugins"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/yt_dlp_plugins",
+    "README.md",
+    "LICENSE",
+]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = [
+    "A",
+    "C",
+    "E",
+    "F",
+    "I",
+    "PIE",
+    "PLC",
+    "PLE",
+    "PLW",
+    "PTH",
+    "PYI",
+    "RET",
+    "RSE",
+    "RUF",
+    "SIM",
+    "TC",
+    "TD",
+    "TID",
+    "W",
+]
+ignore = [
+    "TD003",
+    "E402",
+    "E501",
+    "PLR09",
+    "PLC0415",
+]
+
+[tool.ruff.lint.isort]
+required-imports = ["from __future__ import annotations"]
+force-single-line = true
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
